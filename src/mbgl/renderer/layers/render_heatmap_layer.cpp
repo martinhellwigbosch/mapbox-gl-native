@@ -10,8 +10,6 @@
 #include <mbgl/util/math.hpp>
 #include <mbgl/util/intersection_tests.hpp>
 
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-
 namespace mbgl {
 
 using namespace style;
@@ -51,17 +49,14 @@ void RenderHeatmapLayer::render(PaintParameters& parameters, RenderSource*) {
     }
 
     if (parameters.pass == RenderPass::Translucent) {
-        // parameters.context.clear(Color{ 0.0f, 0.0f, 0.0f, 1.0f }, {}, {});
+        parameters.context.clear(Color{ 0.0f, 0.0f, 0.0f, 0.0f }, {}, {});
 
         for (const RenderTile& tile : renderTiles) {
             assert(dynamic_cast<HeatmapBucket*>(tile.tile.getBucket(*baseImpl)));
             HeatmapBucket& bucket = *reinterpret_cast<HeatmapBucket*>(tile.tile.getBucket(*baseImpl));
-            
-            const auto matrix = tile.translatedMatrix(std::array<float, 2>{{0, 0}},
-                                                           TranslateAnchorType::Map,
-                                                           parameters.state);
+
             const auto extrudeScale = tile.id.pixelsToTileUnits(1, parameters.state.getZoom());
-            
+
             const auto stencilMode = parameters.mapMode != MapMode::Continuous
                 ? parameters.stencilModeForClipping(tile.clip)
                 : gl::StencilMode::disabled();
@@ -71,9 +66,11 @@ void RenderHeatmapLayer::render(PaintParameters& parameters, RenderSource*) {
                 gl::Triangles(),
                 parameters.depthModeForSublayer(0, gl::DepthMode::ReadOnly),
                 stencilMode,
-                parameters.colorModeForRenderPass(),
+                gl::ColorMode::additive(),
                 HeatmapProgram::UniformValues {
-                    uniforms::u_matrix::Value{matrix},
+                    uniforms::u_radius::Value{evaluated.get<style::HeatmapRadius>()},
+                    uniforms::u_intensity::Value{evaluated.get<style::HeatmapIntensity>()},
+                    uniforms::u_matrix::Value{tile.matrix},
                     uniforms::heatmap::u_extrude_scale::Value{extrudeScale}
                 },
                 *bucket.vertexBuffer,
@@ -94,6 +91,11 @@ bool RenderHeatmapLayer::queryIntersectsFeature(
         const float zoom,
         const float bearing,
         const float pixelsToTileUnits) const {
+    (void) queryGeometry;
+    (void) feature;
+    (void) zoom;
+    (void) bearing;
+    (void) pixelsToTileUnits;
     return false;
 }
 

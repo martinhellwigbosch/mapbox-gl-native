@@ -19,6 +19,8 @@ class HeatmapProgram : public Program<
     gl::Attributes<
         attributes::a_pos>,
     gl::Uniforms<
+        uniforms::u_radius,
+        uniforms::u_intensity,
         uniforms::u_matrix,
         uniforms::heatmap::u_extrude_scale>,
     style::HeatmapPaintProperties>
