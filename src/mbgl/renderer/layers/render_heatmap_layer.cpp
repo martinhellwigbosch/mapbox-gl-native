@@ -137,9 +137,9 @@ void RenderHeatmapLayer::updateColorRamp() {
 
     for (uint32_t i = 0; i < size; i += 4) {
         const auto color = colorValue.evaluate((double)i / size);
-        colorRamp[i + 0] = std::floor(color.r * 255 / color.a);
-        colorRamp[i + 1] = std::floor(color.g * 255 / color.a);
-        colorRamp[i + 2] = std::floor(color.b * 255 / color.a);
+        colorRamp[i + 0] = std::floor(color.r * 255);
+        colorRamp[i + 1] = std::floor(color.g * 255);
+        colorRamp[i + 2] = std::floor(color.b * 255);
         colorRamp[i + 3] = std::floor(color.a * 255);
     }
 }
