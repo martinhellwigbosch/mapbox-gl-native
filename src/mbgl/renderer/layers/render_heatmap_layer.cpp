@@ -51,8 +51,8 @@ void RenderHeatmapLayer::render(PaintParameters& parameters, RenderSource*) {
     }
 
     if (parameters.pass == RenderPass::Pass3D) {
-        // TODO quarter of size
-        const auto& size = parameters.staticData.backendSize;
+        const auto& viewportSize = parameters.staticData.backendSize;
+        const auto size = Size{viewportSize.width / 4, viewportSize.height / 4};
 
         if (!renderTexture || renderTexture->getSize() != size) {
             renderTexture = OffscreenTexture(parameters.context, size);
