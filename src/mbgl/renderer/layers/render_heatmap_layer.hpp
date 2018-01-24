@@ -23,6 +23,8 @@ public:
             const float,
             const float) const override;
 
+    void updateColorRamp();
+
     std::unique_ptr<Bucket> createBucket(const BucketParameters&, const std::vector<const RenderLayer*>&) const override;
 
     // Paint properties
@@ -30,6 +32,8 @@ public:
     style::HeatmapPaintProperties::PossiblyEvaluated evaluated;
 
     const style::HeatmapLayer::Impl& impl() const;
+
+    std::array<uint8_t, 1024> colorRamp;
 };
 
 template <>

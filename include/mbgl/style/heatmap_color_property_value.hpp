@@ -22,16 +22,22 @@ private:
     friend bool operator!=(const HeatmapColorPropertyValue& lhs, const HeatmapColorPropertyValue& rhs) {
         return !(lhs == rhs);
     }
-    
+
 public:
     HeatmapColorPropertyValue() : value(nullptr) {}
     HeatmapColorPropertyValue(std::shared_ptr<expression::Expression> value_) : value(std::move(value_)) {}
-    
+
     bool isUndefined() const { return value.get() != nullptr; }
 
     // noop, needed for batch evaluation of paint property values to compile
     template <typename Evaluator>
     Color evaluate(const Evaluator&, TimePoint = {}) const { return {}; }
+
+    Color evaluate(double heatmapDensity) const {
+        const auto result = value->evaluate(expression::EvaluationContext({}, nullptr, {heatmapDensity}));
+        return *expression::fromExpressionValue<Color>(*result);
+    }
+
     bool isDataDriven()     const { return false; }
     bool hasDataDrivenPropertyDifference(const HeatmapColorPropertyValue&) const { return false; }
 };

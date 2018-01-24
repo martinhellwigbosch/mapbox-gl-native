@@ -17,6 +17,8 @@ using namespace style;
 RenderHeatmapLayer::RenderHeatmapLayer(Immutable<style::HeatmapLayer::Impl> _impl)
     : RenderLayer(style::LayerType::Heatmap, _impl),
       unevaluated(impl().paint.untransitioned()) {
+
+    updateColorRamp();
 }
 
 const style::HeatmapLayer::Impl& RenderHeatmapLayer::impl() const {
@@ -82,6 +84,19 @@ void RenderHeatmapLayer::render(PaintParameters& parameters, RenderSource*) {
                 getID()
             );
         }
+    }
+}
+
+void RenderHeatmapLayer::updateColorRamp() {
+    const auto colorValue = unevaluated.get<HeatmapColor>().getValue();
+    const auto size = colorRamp.size();
+
+    for (uint32_t i = 0; i < size; i += 4) {
+        const auto color = colorValue.evaluate((double)i / size);
+        colorRamp[i + 0] = std::floor(color.r * 255 / color.a);
+        colorRamp[i + 1] = std::floor(color.g * 255 / color.a);
+        colorRamp[i + 2] = std::floor(color.b * 255 / color.a);
+        colorRamp[i + 3] = std::floor(color.a * 255);
     }
 }
 
