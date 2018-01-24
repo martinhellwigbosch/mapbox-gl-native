@@ -3,6 +3,8 @@
 #include <mbgl/renderer/render_layer.hpp>
 #include <mbgl/style/layers/heatmap_layer_impl.hpp>
 #include <mbgl/style/layers/heatmap_layer_properties.hpp>
+#include <mbgl/util/optional.hpp>
+#include <mbgl/util/offscreen_texture.hpp>
 
 namespace mbgl {
 
@@ -34,6 +36,8 @@ public:
     const style::HeatmapLayer::Impl& impl() const;
 
     std::array<uint8_t, 1024> colorRamp;
+    optional<OffscreenTexture> renderTexture;
+    optional<gl::Texture> colorRampTexture;
 };
 
 template <>

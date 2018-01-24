@@ -294,7 +294,7 @@ void Renderer::Impl::render(const UpdateParameters& updateParameters) {
         RenderLayer* layer = getRenderLayer(layerImpl->id);
         assert(layer);
 
-        if (!parameters.staticData.has3D && layer->is<RenderFillExtrusionLayer>()) {
+        if (!parameters.staticData.has3D && (layer->is<RenderFillExtrusionLayer>() || layer->is<RenderHeatmapLayer>())) {
             parameters.staticData.has3D = true;
         }
 
