@@ -5,6 +5,7 @@
 #include <mbgl/programs/programs.hpp>
 #include <mbgl/programs/heatmap_program.hpp>
 #include <mbgl/tile/tile.hpp>
+#include <mbgl/style/layers/heatmap_layer.hpp>
 #include <mbgl/style/layers/heatmap_layer_impl.hpp>
 #include <mbgl/geometry/feature_index.hpp>
 #include <mbgl/util/math.hpp>
@@ -17,8 +18,6 @@ using namespace style;
 RenderHeatmapLayer::RenderHeatmapLayer(Immutable<style::HeatmapLayer::Impl> _impl)
     : RenderLayer(style::LayerType::Heatmap, _impl),
       unevaluated(impl().paint.untransitioned()) {
-
-    updateColorRamp();
 }
 
 const style::HeatmapLayer::Impl& RenderHeatmapLayer::impl() const {
@@ -88,7 +87,11 @@ void RenderHeatmapLayer::render(PaintParameters& parameters, RenderSource*) {
 }
 
 void RenderHeatmapLayer::updateColorRamp() {
-    const auto colorValue = unevaluated.get<HeatmapColor>().getValue();
+    auto colorValue = unevaluated.get<HeatmapColor>().getValue();
+    if (colorValue.isUndefined()) {
+        colorValue = HeatmapLayer::getDefaultHeatmapColor();
+    }
+
     const auto size = colorRamp.size();
 
     for (uint32_t i = 0; i < size; i += 4) {
