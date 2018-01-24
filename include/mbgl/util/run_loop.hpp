@@ -10,7 +10,7 @@
 #include <atomic>
 #include <functional>
 #include <utility>
-#include <queue>
+#include <list>
 #include <mutex>
 
 namespace mbgl {
@@ -24,6 +24,11 @@ public:
     enum class Type : uint8_t {
         Default,
         New,
+    };
+
+    enum class Priority : bool {
+        Default = false,
+        High = true,
     };
 
     enum class Event : uint8_t {
@@ -49,9 +54,14 @@ public:
 
     // Invoke fn(args...) on this RunLoop.
     template <class Fn, class... Args>
+    void invoke(Priority priority, Fn&& fn, Args&&... args) {
+        push(priority, WorkTask::make(std::forward<Fn>(fn), std::forward<Args>(args)...));
+    }
+
+    // Invoke fn(args...) on this RunLoop.
+    template <class Fn, class... Args>
     void invoke(Fn&& fn, Args&&... args) {
-        std::shared_ptr<WorkTask> task = WorkTask::make(std::forward<Fn>(fn), std::forward<Args>(args)...);
-        push(task);
+        invoke(Priority::Default, std::forward<Fn>(fn), std::forward<Args>(args)...);
     }
 
     // Post the cancellable work fn(args...) to this RunLoop.
@@ -59,7 +69,7 @@ public:
     std::unique_ptr<AsyncRequest>
     invokeCancellable(Fn&& fn, Args&&... args) {
         std::shared_ptr<WorkTask> task = WorkTask::make(std::forward<Fn>(fn), std::forward<Args>(args)...);
-        push(task);
+        push(Priority::Default, task);
         return std::make_unique<WorkRequest>(task);
     }
                     
@@ -74,15 +84,22 @@ public:
 private:
     MBGL_STORE_THREAD(tid)
 
-    using Queue = std::queue<std::shared_ptr<WorkTask>>;
+    using Queue = std::list<std::shared_ptr<WorkTask>>;
 
     // Wakes up the RunLoop so that it starts processing items in the queue.
     void wake();
 
     // Adds a WorkTask to the queue, and wakes it up.
-    void push(std::shared_ptr<WorkTask> task) {
+    void push(Priority priority, std::shared_ptr<WorkTask> task) {
         std::lock_guard<std::mutex> lock(mutex);
-        queue.push(std::move(task));
+        if (priority == Priority::High) {
+            // We're always placing high priority tasks at the front. This means it's not really a
+            // priority queue, but works more like a stack for those types of items (LIFO).
+            queue.emplace_front(std::move(task));
+        } else {
+            // Tasks with default priority are treated as a queue (FIFO).
+            queue.emplace_back(std::move(task));
+        }
         wake();
     }
 
@@ -91,7 +108,7 @@ private:
         std::shared_ptr<WorkTask> task;
         while (!queue.empty()) {
             task = std::move(queue.front());
-            queue.pop();
+            queue.pop_front();
             lock.unlock();
             (*task)();
             lock.lock();
