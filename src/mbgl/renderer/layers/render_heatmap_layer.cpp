@@ -58,7 +58,6 @@ void RenderHeatmapLayer::render(PaintParameters& parameters, RenderSource*) {
             renderTexture = OffscreenTexture(parameters.context, size);
         }
 
-        // TODO handle color ramp update
         if (!colorRampTexture) {
             const auto colorRampSize = Size{256, 1};
             colorRampTexture = gl::Texture{colorRampSize, parameters.context.createTexture(colorRampSize, colorRamp.data(), gl::TextureFormat::RGBA, 1)};
@@ -136,11 +135,15 @@ void RenderHeatmapLayer::updateColorRamp() {
     const auto size = colorRamp.size();
 
     for (uint32_t i = 0; i < size; i += 4) {
-        const auto color = colorValue.evaluate((double)i / size);
+        const auto color = colorValue.evaluate(static_cast<double>(i) / size);
         colorRamp[i + 0] = std::floor(color.r * 255);
         colorRamp[i + 1] = std::floor(color.g * 255);
         colorRamp[i + 2] = std::floor(color.b * 255);
         colorRamp[i + 3] = std::floor(color.a * 255);
+    }
+
+    if (colorRampTexture) {
+        colorRampTexture = nullopt;
     }
 }
 
