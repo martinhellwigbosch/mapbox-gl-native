@@ -276,13 +276,14 @@ bool Context::supportsProgramBinaries() const {
         return false;
     }
 
-    // Blacklist Adreno 3xx, 4xx, and 5xx GPUs due to known bugs:
+    // Blacklist Adreno 2xx, 3xx, 4xx, and 5xx GPUs due to known bugs:
     // https://bugs.chromium.org/p/chromium/issues/detail?id=510637
     // https://chromium.googlesource.com/chromium/src/gpu/+/master/config/gpu_driver_bug_list.json#2316
     // Blacklist Vivante GC4000 due to bugs when linking loaded programs:
     // https://github.com/mapbox/mapbox-gl-native/issues/10704
     const std::string renderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
-    if (renderer.find("Adreno (TM) 3") != std::string::npos
+    if (renderer.find("Adreno (TM) 2") != std::string::npos
+     || renderer.find("Adreno (TM) 3") != std::string::npos
      || renderer.find("Adreno (TM) 4") != std::string::npos
      || renderer.find("Adreno (TM) 5") != std::string::npos
      || renderer.find("Vivante GC4000") != std::string::npos) {
