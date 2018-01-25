@@ -10,14 +10,20 @@ import android.support.test.espresso.UiController;
 import android.support.test.espresso.ViewAction;
 import android.support.test.rule.ActivityTestRule;
 import android.view.View;
+
+import com.mapbox.mapboxsdk.constants.Style;
+import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.testapp.R;
 import com.mapbox.mapboxsdk.testapp.utils.OnMapReadyIdlingResource;
+
 import junit.framework.Assert;
+
 import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
+
 import timber.log.Timber;
 
 import static android.support.test.espresso.Espresso.onView;
@@ -36,19 +42,30 @@ public abstract class BaseActivityTest {
   public void beforeTest() {
     try {
       Timber.e("@Before test: register idle resource");
-      idlingResource = new OnMapReadyIdlingResource(rule.getActivity());
-      Espresso.registerIdlingResources(idlingResource);
-      checkViewIsDisplayed(R.id.mapView);
-      mapboxMap = idlingResource.getMapboxMap();
+      obtainMapboxMap();
     } catch (IdlingResourceTimeoutException idlingResourceTimeoutException) {
-      Timber.e("Idling resource timed out. Couldn't not validate if map is ready.");
-      throw new RuntimeException("Could not start test for " + getActivityClass().getSimpleName() + ".\n"
-        + "The ViewHierarchy doesn't contain a view with resource id = R.id.mapView or \n"
-        + "the Activity doesn't contain an instance variable with a name equal to mapboxMap.\n"
-        + "You can resolve this issue by adding the requirements above or\n add "
-        + getActivityClass().getSimpleName() + " to the platform/android/scripts/exclude-activity-gen.json to blacklist"
-        + " the Activity from being generated.\n");
+      Timber.e("@Before test: IdlingResourceTimeoutException retrying");
+      try {
+        MapView mapView = (MapView) rule.getActivity().findViewById(R.id.mapView);
+        mapView.setStyleUrl(Style.MAPBOX_STREETS);
+        obtainMapboxMap();
+      } catch (IdlingResourceTimeoutException exception) {
+        Timber.e("Idling resource timed out. Couldn't not validate if map is ready.");
+        throw new RuntimeException("Could not start test for " + getActivityClass().getSimpleName() + ".\n"
+          + "The ViewHierarchy doesn't contain a view with resource id = R.id.mapView or \n"
+          + "the Activity doesn't contain an instance variable with a name equal to mapboxMap.\n"
+          + "You can resolve this issue by adding the requirements above or\n add "
+          + getActivityClass().getSimpleName() + " to the platform/android/scripts/exclude-activity-gen.json to blacklist"
+          + " the Activity from being generated.\n");
+      }
     }
+  }
+
+  private void obtainMapboxMap() {
+    idlingResource = new OnMapReadyIdlingResource(rule.getActivity());
+    Espresso.registerIdlingResources(idlingResource);
+    checkViewIsDisplayed(R.id.mapView);
+    mapboxMap = idlingResource.getMapboxMap();
   }
 
   protected void validateTestSetup() {
